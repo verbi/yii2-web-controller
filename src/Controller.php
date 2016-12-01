@@ -11,6 +11,7 @@ use verbi\yii2WebController\behaviors\DisplayReturnLinkBehavior;
  * @license https://opensource.org/licenses/GPL-3.0
  */
 class Controller extends \yii\web\Controller {
+    use \verbi\yii2Helpers\traits\ComponentTrait;
     use \verbi\yii2Helpers\traits\ControllerTrait;
     const EVENT_BEFORE_RENDER = 'before_render';
     
@@ -23,8 +24,6 @@ class Controller extends \yii\web\Controller {
             'class' => 'yii\filters\HttpCache',
             'cacheControlHeader' => 'public, max-age=86400',
                     ],
-            // get field names
-            \verbi\yii2Helpers\behaviors\base\ComponentBehavior::className(),
         ]);
     }
     
