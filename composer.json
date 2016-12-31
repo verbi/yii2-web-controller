@@ -14,7 +14,7 @@
 		"source": "https://github.com/verbi/yii2-web-controller"
 	},
         "require": {
-            "verbi/yii2-web-view": "*"
+            "verbi/yii2-web-view": ">=1.2.0"
         },
 	"autoload": {
 		"psr-4": {
