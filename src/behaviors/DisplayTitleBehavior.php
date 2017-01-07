@@ -22,7 +22,10 @@ class DisplayTitleBehavior extends Behavior {
      */
     public function attach($owner) {
         $result = parent::attach($owner);
-        Yii::$app->set('view', ['class' => '\verbi\yii2WebView\web\View']);
+        $viewClass = \verbi\yii2WebView\web\View::className();
+        if(!(Yii::$app->get('view') instanceof $viewClass)) {
+            Yii::$app->set('view', array_merge(get_object_vars(Yii::$app->get('view')),['class' => $viewClass]));
+        }
         $className = $this->owner->className();
         $this->owner->on($className::EVENT_BEFORE_RENDER, [$this, 'renderContent']);
         return $result;
