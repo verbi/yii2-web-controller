@@ -4,6 +4,7 @@ namespace verbi\yii2WebController;
 use \Yii;
 use verbi\yii2WebController\behaviors\DisplayTitleBehavior;
 use verbi\yii2WebController\behaviors\DisplayReturnLinkBehavior;
+use verbi\yii2Helpers\behaviors\base\AccessControl;
 
 /**
  * @author Philip Verbist <philip.verbist@gmail.com>
@@ -21,9 +22,12 @@ class Controller extends \yii\web\Controller {
     {
         return array_merge(parent::behaviors(),[
             [
-            'class' => 'yii\filters\HttpCache',
-            'cacheControlHeader' => 'public, max-age=86400',
-                    ],
+                'class' => 'yii\filters\HttpCache',
+                'cacheControlHeader' => 'public, max-age=86400',
+            ],
+            'access' => [
+                'class' => AccessControl::className(),
+            ],
         ]);
     }
     
