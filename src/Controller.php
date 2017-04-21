@@ -5,7 +5,8 @@ use \Yii;
 use verbi\yii2WebController\behaviors\DisplayTitleBehavior;
 use verbi\yii2WebController\behaviors\DisplayReturnLinkBehavior;
 use verbi\yii2Helpers\behaviors\base\AccessControl;
-
+use verbi\yii2WebController\events\ControllerRenderEvent;
+use yii\web\NotFoundHttpException;
 /**
  * @author Philip Verbist <philip.verbist@gmail.com>
  * @link https://github.com/verbi/yii2-web-controller/
@@ -15,6 +16,7 @@ class Controller extends \yii\web\Controller {
     use \verbi\yii2Helpers\traits\ComponentTrait;
     use \verbi\yii2Helpers\traits\ControllerTrait;
     const EVENT_BEFORE_RENDER = 'before_render';
+    const EVENT_AFTER_RENDER = 'after_render';
     
     protected $modelClass;
     
@@ -36,7 +38,7 @@ class Controller extends \yii\web\Controller {
         if ($id!==null) {
             $model = $modelClass::findOne($id);
             if ($model === null) {
-                throw new \yii\web\NotFoundHttpException\NotFoundHttpException;
+                throw new NotFoundHttpException;
             }
             return $model;
         }
@@ -86,7 +88,18 @@ class Controller extends \yii\web\Controller {
         echo $content;
         $output = ob_get_contents();
         ob_end_clean();
+        $this->afterRender($output);
         return parent::renderContent($output);
     }
 
+    public function afterRender(&$output)
+    {
+        if ($this->hasEventHandlers(self::EVENT_AFTER_RENDER)) {
+            $event = new ControllerRenderEvent([
+                'output' => $output,
+            ]);
+            $this->trigger(self::EVENT_AFTER_RENDER, $event);
+            $output = $event->output;
+        }
+    }
 }
