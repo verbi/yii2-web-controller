@@ -12,7 +12,7 @@ use verbi\yii2Helpers\Html;
  * @license https://opensource.org/licenses/GPL-3.0
  */
 class DisplayReturnLinkBehavior extends Behavior {
-
+    
     /**
      * Attaches the behavior object to the component.
      * The default implementation will set the [[owner]] property
@@ -29,6 +29,12 @@ class DisplayReturnLinkBehavior extends Behavior {
         $className = $this->owner->className();
         $this->owner->on($className::EVENT_BEFORE_RENDER, [$this, 'renderContent']);
         return $result;
+    }
+    
+    public function detach() {
+        $className = $this->owner->className();
+        $this->owner->off($className::EVENT_BEFORE_RENDER, [$this, 'renderContent']);
+        return parent::detach();
     }
 
     /**

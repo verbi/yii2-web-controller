@@ -30,6 +30,12 @@ class DisplayTitleBehavior extends Behavior {
         $this->owner->on($className::EVENT_BEFORE_RENDER, [$this, 'renderContent']);
         return $result;
     }
+    
+    public function detach() {
+        $className = $this->owner->className();
+        $this->owner->off($className::EVENT_BEFORE_RENDER, [$this, 'renderContent']);
+        return parent::detach();
+    }
 
     /**
      * 
