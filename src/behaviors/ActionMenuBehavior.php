@@ -6,6 +6,7 @@ use verbi\yii2Helpers\behaviors\base\Behavior;
 use verbi\yii2WebController\events\ControllerRenderEvent;
 use verbi\yii2Helpers\events\GeneralFunctionEvent;
 use verbi\yii2WebController\Controller;
+use verbi\yii2WebController\widgets\ActionMenuButtons;
 use yii\bootstrap\Nav;
 use yii\base\Action;
 use yii\base\InlineAction;
@@ -21,13 +22,16 @@ class ActionMenuBehavior extends Behavior {
     const EVENT_AFTER_GENERATE_CONFIG_FOR_ACTION_BUTTONS = 'after_generate_config_for_action_buttons';
 
     public $actionButtons;
+    public $render = true;
     public $events = [
         Controller::EVENT_AFTER_RENDER => 'eventAfterRender',
         self::EVENT_AFTER_GENERATE_CONFIG_FOR_ACTION_BUTTONS => 'verfFilter_afterGenerateConfigForActionButtons',
     ];
 
     public function eventAfterRender(ControllerRenderEvent $event) {
-        $event->output = $this->owner->renderActionMenu() . $event->output;
+        if($this->render) {
+            $event->output = $this->owner->renderActionMenu() . $event->output;
+        }
     }
 
     public function getActionButtonsArray() {
@@ -99,7 +103,7 @@ class ActionMenuBehavior extends Behavior {
 
     public function renderActionMenu() {
         $actionButtons = $this->owner->getActionButtonsArray();
-        return $actionButtons ? Nav::widget([
+        return $actionButtons ? ActionMenuButtons::widget([
                     'items' => $actionButtons,
                 ]) : '';
     }
