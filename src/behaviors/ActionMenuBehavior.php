@@ -22,11 +22,11 @@ class ActionMenuBehavior extends Behavior {
 
     public $actionButtons;
     public $events = [
-        Controller::EVENT_AFTER_RENDER => 'EventAfterRender',
+        Controller::EVENT_AFTER_RENDER => 'eventAfterRender',
         self::EVENT_AFTER_GENERATE_CONFIG_FOR_ACTION_BUTTONS => 'verfFilter_afterGenerateConfigForActionButtons',
     ];
 
-    public function EventAfterRender(ControllerRenderEvent $event) {
+    public function eventAfterRender(ControllerRenderEvent $event) {
         $event->output = $this->owner->renderActionMenu() . $event->output;
     }
 
