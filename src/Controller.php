@@ -33,6 +33,15 @@ class Controller extends \yii\web\Controller {
         ]);
     }
     
+    public function getPkFromRequest() {
+        $modelClass = $this->modelClass;
+        $pk = [];
+        foreach ($modelClass::primaryKey(true) as $key) {
+            $pk[$key] = \Yii::$app->request->getQueryParam($key);
+        }
+        return $pk;
+    }
+    
     public function loadModel($id = null) {
         $modelClass = $this->modelClass;
         if ($id!==null) {
