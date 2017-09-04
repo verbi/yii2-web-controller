@@ -20,14 +20,14 @@ class ActionMenuButtons extends Widget {
             $actionButtons = $config['items'];
             unset($config['items']);
 
-            return ButtonDropdown::widget(array_merge([
+            return sizeof($actionButtons)?ButtonDropdown::widget(array_merge([
                     'dropdown' => [
                         'items' => $actionButtons,
                     ],
                     'containerOptions' => [
                         'class' => 'actionButtons',
                     ],
-                ], $config));
+                ], $config)):null;
         }
     }
 }
