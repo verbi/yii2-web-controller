@@ -2,7 +2,6 @@
 
 namespace verbi\yii2WebController\behaviors;
 
-use verbi\yii2Helpers\behaviors\base\Behavior;
 use verbi\yii2WebController\events\ControllerRenderEvent;
 use verbi\yii2Helpers\events\GeneralFunctionEvent;
 use verbi\yii2WebController\Controller;
@@ -14,7 +13,7 @@ use yii\filters\VerbFilter;
 use verbi\yii2ConfirmationFilter\behaviors\ConfirmationFilterBehavior;
 use verbi\yii2Helpers\Html;
 
-class ActionMenuBehavior extends Behavior {
+class ActionMenuBehavior extends ActionBehavior {
 
     const EVENT_BEFORE_FILTER = 'before_filter';
     const EVENT_AFTER_FILTER = 'after_filter';
@@ -24,7 +23,7 @@ class ActionMenuBehavior extends Behavior {
 
     public $actionButtons;
     public $render = true;
-    
+
     /**
      * @var Array|null An Array of strings containing the allowed verbs
      */
@@ -42,7 +41,7 @@ class ActionMenuBehavior extends Behavior {
     ];
 
     public function eventAfterRender(ControllerRenderEvent $event) {
-        if($this->render) {
+        if ($this->render) {
             $event->output = $this->owner->renderActionMenu() . $event->output;
         }
     }
@@ -60,7 +59,7 @@ class ActionMenuBehavior extends Behavior {
 
                         $array = [
                             'label' => $action->id,
-                            'url' => array_merge([$action->id], $parameters),
+                            'url' => $this->owner->getActionUrl($action),
                             'parameters' => $parameters,
                             'action' => $action,
                         ];
@@ -75,8 +74,8 @@ class ActionMenuBehavior extends Behavior {
                 }, $actions) : $owner->actionButtons;
         $event = new GeneralFunctionEvent;
         $event->setParams([
-                            'actionButtons' => &$actionButtons,
-                        ]);
+            'actionButtons' => &$actionButtons,
+        ]);
         $object->trigger(self::EVENT_AFTER_GET_ACTION_BUTTONS_ARRAY, $event);
         return $actionButtons;
     }
@@ -84,12 +83,16 @@ class ActionMenuBehavior extends Behavior {
     public function _filter_afterGenerateConfigForActionButtons(GeneralFunctionEvent $event) {
         $params = $event->getParams();
         $action = $params['action'];
-        $method = 'get';
-        foreach ($this->owner->getBehaviorsByClass(VerbFilter::className()) as $behavior) {
-            if (isset($behavior->actions[$action->id]) && is_array($behavior->actions[$action->id]) && sizeof($behavior->actions[$action->id]) && false === array_search($method, $behavior->actions[$action->id])) {
-                $params['output']['linkOptions']['data']['method'] = array_values($behavior->actions[$action->id])[0];
-            }
+//        $method = 'get';
+        $method = $this->getMethodsForAction($action, 'get');
+        if ($method) {
+            $params['output']['linkOptions']['data']['method'] = $method;
         }
+//        foreach ($this->owner->getBehaviorsByClass(VerbFilter::className()) as $behavior) {
+//            if (isset($behavior->actions[$action->id]) && is_array($behavior->actions[$action->id]) && sizeof($behavior->actions[$action->id]) && false === array_search($method, $behavior->actions[$action->id])) {
+//                $params['output']['linkOptions']['data']['method'] = array_values($behavior->actions[$action->id])[0];
+//            }
+//        }
     }
 
     public function _actionMenuBehavior_getActionsForButtons() {
@@ -107,11 +110,8 @@ class ActionMenuBehavior extends Behavior {
         if ($event->isValid) {
             $actions = $owner->getActionsForButtons();
             $filteredActions = array_filter($actions, function($action) use ($owner) {
-                if ($action === null
-                        || $owner->action == $action
-                        || $owner->getActionParametersForUrl($action) === null
-                        || !$owner->_actionMenuBehavior_checkVerbForAction($action)
-                    ) {
+                if ($action === null || $owner->action == $action || $owner->getActionParametersForUrl($action) === null || !$owner->_actionMenuBehavior_checkVerbForAction($action)
+                ) {
                     return false;
                 }
                 return true;
@@ -126,27 +126,24 @@ class ActionMenuBehavior extends Behavior {
     public function filterActionsForButtons() {
         return $this->_actionMenuBehavior_filterActionsForButtons();
     }
-    
+
     public function _filterActionsForButtonsByAccess(GeneralFunctionEvent $event) {
         $params = $event->getParams();
 //        $actionButtons = $params['actionButtons'];
-        foreach($params['actionButtons'] as $key => $actionButton) {
-            if($this->owner->hasBehaviorByClass(\verbi\yii2Helpers\behaviors\base\AccessControl::className()) && !$this->owner->checkAccess($actionButton['action'], $actionButton['parameters'], isset($actionButton['linkOptions'])?$actionButton['linkOptions']['data']['method']:'get'))
+        foreach ($params['actionButtons'] as $key => $actionButton) {
+            if ($this->owner->hasBehaviorByClass(\verbi\yii2Helpers\behaviors\base\AccessControl::className()) && !$this->owner->checkAccess($actionButton['action'], $actionButton['parameters'], isset($actionButton['linkOptions']) ? $actionButton['linkOptions']['data']['method'] : 'get'))
                 unset($params['actionButtons'][$key]);
         }
     }
-    
+
     public function _actionMenuBehavior_checkVerbForAction($action) {
-        if(is_array($this->allowedVerbs)) {
+        if (is_array($this->allowedVerbs)) {
 //            $method = 'get';
             foreach ($this->owner->getBehaviorsByClass(VerbFilter::className()) as $behavior) {
-                if (isset($behavior->actions[$action->id])
-                        && is_array($behavior->actions[$action->id])
-                        && sizeof($behavior->actions[$action->id])
+                if (isset($behavior->actions[$action->id]) && is_array($behavior->actions[$action->id]) && sizeof($behavior->actions[$action->id])
 //                        && false === array_search($method, $behavior->actions[$action->id])
-                        
-                        ) {
-                    if(empty(array_intersect(array_values($behavior->actions[$action->id]), $this->allowedVerbs))) {
+                ) {
+                    if (empty(array_intersect(array_values($behavior->actions[$action->id]), $this->allowedVerbs))) {
                         return false;
                     }
                 }
@@ -154,7 +151,7 @@ class ActionMenuBehavior extends Behavior {
         }
         return true;
     }
-    
+
     public function renderActionMenu() {
         $actionButtons = $this->owner->getActionButtonsArray();
         return $actionButtons ? ActionMenuButtons::widget([
@@ -163,17 +160,11 @@ class ActionMenuBehavior extends Behavior {
     }
 
     public function _actionMenuBehavior_getActionMenuReflectionParameters(Action $action) {
-        if ($action instanceof InlineAction) {
-            $method = $this->owner->getReflectionMethod($action->actionMethod);
-        } else {
-            $method = new \ReflectionMethod($action, 'run');
-        }
-
-        return $method->getParameters();
+        return $this->getActionMenuReflectionParameters($action);
     }
 
     public function _actionMenuBehavior_getCurrentActionParams() {
-        return $this->owner->actionParams;
+        return parent::getCurrentActionParams();
     }
 
     public function getCurrentActionParams() {
@@ -181,29 +172,6 @@ class ActionMenuBehavior extends Behavior {
     }
 
     public function _actionMenuBehavior_getActionMenuParametersForUrl(Action $action, bool $allowMissing = false) {
-        $params = $this->owner->getCurrentActionParams();
-        $args = [];
-        $actionParams = [];
-        foreach ($this->owner->_actionMenuBehavior_getActionMenuReflectionParameters($action) as $param) {
-            $name = $param->getName();
-            if (array_key_exists($name, $params)) {
-                if ($param->isArray()) {
-                    $args[] = $actionParams[$name] = (array) $params[$name];
-                } elseif (!is_array($params[$name])) {
-                    $args[] = $actionParams[$name] = $params[$name];
-                }
-                unset($params[$name]);
-            } elseif (!$param->isDefaultValueAvailable()) {
-                if (!$allowMissing) {
-                    return null;
-                }
-            }
-        }
-        return $actionParams;
+        return parent::getActionParametersForUrl($action, $allowMissing);
     }
-
-    public function getActionParametersForUrl(Action $action, bool $allowMissing = false) {
-        return $this->owner->_actionMenuBehavior_getActionMenuParametersForUrl($action, $allowMissing);
-    }
-
 }
