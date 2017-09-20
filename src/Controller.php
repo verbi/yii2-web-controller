@@ -37,7 +37,11 @@ class Controller extends \yii\web\Controller {
         $modelClass = $this->modelClass;
         $pk = [];
         foreach ($modelClass::primaryKey(true) as $key) {
-            $pk[$key] = \Yii::$app->request->getQueryParam($key);
+            $val = \Yii::$app->request->get($key,\Yii::$app->request->post($key));
+            if($val === null) {
+                return null;
+            }
+            $pk[$key] = $val;
         }
         return $pk;
     }
