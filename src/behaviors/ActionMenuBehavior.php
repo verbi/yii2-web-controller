@@ -6,12 +6,8 @@ use verbi\yii2WebController\events\ControllerRenderEvent;
 use verbi\yii2Helpers\events\GeneralFunctionEvent;
 use verbi\yii2WebController\Controller;
 use verbi\yii2WebController\widgets\ActionMenuButtons;
-use yii\bootstrap\Nav;
 use yii\base\Action;
-use yii\base\InlineAction;
 use yii\filters\VerbFilter;
-use verbi\yii2ConfirmationFilter\behaviors\ConfirmationFilterBehavior;
-use verbi\yii2Helpers\Html;
 
 class ActionMenuBehavior extends ActionBehavior {
 
@@ -83,16 +79,10 @@ class ActionMenuBehavior extends ActionBehavior {
     public function _filter_afterGenerateConfigForActionButtons(GeneralFunctionEvent $event) {
         $params = $event->getParams();
         $action = $params['action'];
-//        $method = 'get';
         $method = $this->getMethodsForAction($action, 'get');
         if ($method) {
             $params['output']['linkOptions']['data']['method'] = $method;
         }
-//        foreach ($this->owner->getBehaviorsByClass(VerbFilter::className()) as $behavior) {
-//            if (isset($behavior->actions[$action->id]) && is_array($behavior->actions[$action->id]) && sizeof($behavior->actions[$action->id]) && false === array_search($method, $behavior->actions[$action->id])) {
-//                $params['output']['linkOptions']['data']['method'] = array_values($behavior->actions[$action->id])[0];
-//            }
-//        }
     }
 
     public function _actionMenuBehavior_getActionsForButtons() {
@@ -129,19 +119,18 @@ class ActionMenuBehavior extends ActionBehavior {
 
     public function _filterActionsForButtonsByAccess(GeneralFunctionEvent $event) {
         $params = $event->getParams();
-//        $actionButtons = $params['actionButtons'];
         foreach ($params['actionButtons'] as $key => $actionButton) {
-            if ($this->owner->hasBehaviorByClass(\verbi\yii2Helpers\behaviors\base\AccessControl::className()) && !$this->owner->checkAccess($actionButton['action'], $actionButton['parameters'], isset($actionButton['linkOptions']) ? $actionButton['linkOptions']['data']['method'] : 'get'))
+            if ($this->owner->hasBehaviorByClass(\verbi\yii2ExtendedAccessControl\filters\AccessControl::className()) 
+                    && !$this->owner->checkAccess($actionButton['action'], $actionButton['parameters'], 
+                            isset($actionButton['linkOptions']) ? $actionButton['linkOptions']['data']['method'] : 'get'))
                 unset($params['actionButtons'][$key]);
         }
     }
 
     public function _actionMenuBehavior_checkVerbForAction($action) {
         if (is_array($this->allowedVerbs)) {
-//            $method = 'get';
             foreach ($this->owner->getBehaviorsByClass(VerbFilter::className()) as $behavior) {
                 if (isset($behavior->actions[$action->id]) && is_array($behavior->actions[$action->id]) && sizeof($behavior->actions[$action->id])
-//                        && false === array_search($method, $behavior->actions[$action->id])
                 ) {
                     if (empty(array_intersect(array_values($behavior->actions[$action->id]), $this->allowedVerbs))) {
                         return false;

@@ -1,12 +1,14 @@
 <?php
 
 namespace verbi\yii2WebController;
+
 use \Yii;
 use verbi\yii2WebController\behaviors\DisplayTitleBehavior;
 use verbi\yii2WebController\behaviors\DisplayReturnLinkBehavior;
-use verbi\yii2Helpers\behaviors\base\AccessControl;
+use verbi\yii2ExtendedAccessControl\filters\AccessControl;
 use verbi\yii2WebController\events\ControllerRenderEvent;
 use yii\web\NotFoundHttpException;
+
 /**
  * @author Philip Verbist <philip.verbist@gmail.com>
  * @link https://github.com/verbi/yii2-web-controller/
